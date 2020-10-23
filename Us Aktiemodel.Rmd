@@ -1,0 +1,83 @@
+
+```{r}
+#=================
+library("readxl")
+#library("tidyverse")
+library("xlsx")
+#library("ggplot2")
+library("corrplot")
+#library("corrr")
+#library("lubridate")
+library("caTools")
+library("ElemStatLearn")
+library("pROC")
+library("ROCR")
+#library("jsonlite")
+#library("oddsratio")
+library("randomForest")
+library("caret")
+library("dplyr")
+library("Hmisc")
+library("jtools")
+
+options(scipen = 999) #no scientific numbers
+```
+
+#Import data
+
+#=================
+# IMPORTING DATA 
+#=================
+
+
+```{r}
+aktiemodel_data <- read.csv2(file='ModellingDataSet.csv', sep=",", header=TRUE, stringsAsFactors = FALSE, fileEncoding = "UTF-8-BOM")
+#head(aktiemodel_data)
+
+
+aktiemodel_data$Wilshire5000 <- as.double(aktiemodel_data$Wilshire5000)
+aktiemodel_data$GDP <- as.double(aktiemodel_data$GDP)
+aktiemodel_data$GvtBond <- as.double(aktiemodel_data$GvtBond)
+aktiemodel_data$DATE <- as.Date(aktiemodel_data$DATE)
+
+head(aktiemodel_data)
+
+aktiemodel_data =aktiemodel_data %>%mutate(LogGDP=log(GDP), LogWilshire=log(Wilshire5000), LogGvtBond=log(GvtBond))
+
+head(aktiemodel_data)
+
+```
+
+
+#===================
+# BUILD LINEAR MODEL
+#===================
+```{r}
+linear_model <- lm(LogWilshire ~ LogGDP , data = aktiemodel_data)
+```
+
+#=====================================
+# RETRIEVE SUMMARY STATISTICS OF MODEL
+#=====================================
+```{r}
+summary(linear_model)
+```
+
+```{r}
+
+
+linear_model_fitted = fitted(linear_model)
+head(linear_model_fitted)
+
+combined <- cbind(aktiemodel_data, resid = resid(linear_model), fitted = fitted(linear_model))
+
+theme_set(theme_minimal())
+
+ggplot(data=combined, aes(x=DATE)) +
+geom_line(aes(y = LogWilshire), color = "darkred") +
+geom_line(aes(y = fitted), color="steelblue", linetype="twodash")
+
+#write.csv2(combined, file="ModelOutput.csv")
+
+```
+
