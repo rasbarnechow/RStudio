@@ -38,11 +38,12 @@ aktiemodel_data <- read.csv2(file='ModellingDataSet.csv', sep=",", header=TRUE, 
 aktiemodel_data$Wilshire5000 <- as.double(aktiemodel_data$Wilshire5000)
 aktiemodel_data$GDP <- as.double(aktiemodel_data$GDP)
 aktiemodel_data$GvtBond <- as.double(aktiemodel_data$GvtBond)
+aktiemodel_data$CorporateBondAAA <- as.double(aktiemodel_data$CorporateBondAAA)
 aktiemodel_data$DATE <- as.Date(aktiemodel_data$DATE)
 
 head(aktiemodel_data)
 
-aktiemodel_data =aktiemodel_data %>%mutate(LogGDP=log(GDP), LogWilshire=log(Wilshire5000), LogGvtBond=log(GvtBond))
+aktiemodel_data =aktiemodel_data %>%mutate(LogGDP=log(GDP), LogWilshire=log(Wilshire5000), LogGvtBond=log(GvtBond), LogCorporateBondAAA=log(CorporateBondAAA))
 
 head(aktiemodel_data)
 
@@ -53,7 +54,7 @@ head(aktiemodel_data)
 # BUILD LINEAR MODEL
 #===================
 ```{r}
-linear_model <- lm(LogWilshire ~ LogGDP , data = aktiemodel_data)
+linear_model <- lm(LogWilshire ~ LogGDP + log(CorporateBondAAA) , data = aktiemodel_data)
 ```
 
 #=====================================
@@ -63,6 +64,10 @@ linear_model <- lm(LogWilshire ~ LogGDP , data = aktiemodel_data)
 summary(linear_model)
 ```
 
+
+#=====================================
+# PLOT Actual Whilshere5000 data against Model fit (fitted values)
+#=====================================
 ```{r}
 
 
@@ -73,11 +78,19 @@ combined <- cbind(aktiemodel_data, resid = resid(linear_model), fitted = fitted(
 
 theme_set(theme_minimal())
 
+#Model output and fit in logs (percentage changes)
 ggplot(data=combined, aes(x=DATE)) +
 geom_line(aes(y = LogWilshire), color = "darkred") +
 geom_line(aes(y = fitted), color="steelblue", linetype="twodash")
 
 #write.csv2(combined, file="ModelOutput.csv")
+
+combined_nolog = combined %>% mutate(fitted_clean = exp(fitted))
+
+#Model output without logs
+ggplot(data=combined_nolog, aes(x=DATE)) +
+geom_line(aes(y = Wilshire5000), color = "darkred") +
+geom_line(aes(y = fitted_clean), color="steelblue", linetype="twodash")
 
 ```
 
